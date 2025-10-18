@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ evento.titulo }} - SGEA{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1 style="color: var(--primary-color);">{{ evento.titulo }}</h1>
+    <span class="event-type">{{ evento.get_tipo_display }}</span>
+
+    <div style="margin-top: 2rem;">
+        <h3>Descrição</h3>
+        <p>{{ evento.descricao }}</p>
+    </div>
+
+    <div style="margin-top: 2rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+        <div>
+            <strong>Data de Início:</strong> {{ evento.data_inicio|date:"d/m/Y" }}
+        </div>
+        {% if evento.data_fim %}
+        <div>
+            <strong>Data de Término:</strong> {{ evento.data_fim|date:"d/m/Y" }}
+        </div>
+        {% endif %}
+        <div>
+            <strong>Horário:</strong> {{ evento.horario }}
+        </div>
+        <div>
+            <strong>Local:</strong> {{ evento.local }}
+        </div>
+        <div>
+            <strong>Vagas Totais:</strong> {{ evento.vagas }}
+        </div>
+        <div>
+            <strong>Vagas Disponíveis:</strong> {{ evento.vagas_disponiveis }}
+        </div>
+    </div>
+
+    <div style="margin-top: 2rem;">
+        {% if evento.vagas_disponiveis > 0 and evento.status == 'ABERTO' %}
+        <a href="{% url 'inscrever_evento' evento.id %}" class="btn btn-success">Inscrever-se no Evento</a>
+        {% else %}
+        <button class="btn btn-primary" disabled>Inscrições Encerradas</button>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Lista de Inscritos (apenas para organizadores) -->
+{% if user.perfil == 'ORGANIZADOR' or evento.organizador == user %}
+<div class="card">
+    <h2 style="color: var(--primary-color);">Participantes Inscritos ({{ inscricoes.count }})</h2>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Email</th>
+                    <th>Instituição</th>
+                    <th>Data de Inscrição</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for inscricao in inscricoes %}
+                <tr>
+                    <td>{{ inscricao.usuario.nome }}</td>
+                    <td>{{ inscricao.usuario.email }}</td>
+                    <td>{{ inscricao.usuario.instituicao }}</td>
+                    <td>{{ inscricao.data_inscricao|date:"d/m/Y" }}</td>
+                    <td>
+                        {% if inscricao.status == 'CONFIRMADA' %}
+                        <a href="{% url 'emitir_certificado' inscricao.id %}" class="btn btn-primary">Emitir Certificado</a>
+                        {% else %}
+                        <span>{{ inscricao.get_status_display }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" style="text-align: center; color: #666;">Nenhum participante inscrito</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
